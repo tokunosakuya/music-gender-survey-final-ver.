@@ -23,3 +23,5 @@ const TRACKS = RAW_TRACKS.map(track => {
     file: `https://${SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/public/${BUCKET_NAME}/${encodedPath}`
   };
 });
+// 파일 맨 아래에 이 한 줄을 추가해서 브라우저 어디서든 찾을 수 있게 만듭니다.
+window.TRACKS = TRACKS;
