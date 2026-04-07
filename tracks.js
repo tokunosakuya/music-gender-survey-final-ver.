@@ -1,3 +1,4 @@
+// 1. RAW_TRACKS 앞에 export가 있다면 반드시 지우세요!
 const RAW_TRACKS = [
   {
     "id": "track_001",
@@ -6,14 +7,15 @@ const RAW_TRACKS = [
     "genre": "blues",
     "style": "feminine"
   },
-  // ... 나머지 데이터들 ...
+  // ... (나머지 데이터들)
 ];
 
-const SUPABASE_PROJECT_ID = 'zididtqghlsxszjkpiuk'; // 실제 ID로 변경
+// 2. 이 부분도 export 없이 작성하세요.
+const SUPABASE_PROJECT_ID = 'zididtqghlsxszjkpiuk'; // 사용자님의 실제 ID
 const BUCKET_NAME = 'audio-tracks'; 
 
 const TRACKS = RAW_TRACKS.map(track => {
-  // 파일 경로 내의 공백이나 특수문자를 URL용으로 변환 (예: ' ' -> '%20')
+  // 파일 경로 내의 공백이나 특수문자를 URL용으로 안전하게 변환
   const encodedPath = track.file.split('/').map(part => encodeURIComponent(part)).join('/');
   
   return {
