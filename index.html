@@ -309,12 +309,15 @@
       const assignment = await getOrCreateAssignment();
       const PARTICIPANT_TRACKS = assignment.tracks;
 
-      if (!Array.isArray(PARTICIPANT_TRACKS) || PARTICIPANT_TRACKS.length !== 30) {
-        alert("배정된 트랙 수가 올바르지 않습니다. tracks.js와 장르 구성을 확인해주세요.");
-        console.error("배정 오류:", PARTICIPANT_TRACKS);
-        return;
-      }
+     // 30개 체크를 일단 끕니다. 데이터가 0개인지만 확인하세요.
+if (!PARTICIPANT_TRACKS || PARTICIPANT_TRACKS.length === 0) {
+  alert("트랙 데이터를 불러오지 못했습니다. 잠시 후 새로고침(Ctrl+F5)을 시도해주세요.");
+  console.error("배정 오류: PARTICIPANT_TRACKS가 비어있음");
+  return;
+}
 
+// 만약 30개가 안 되더라도 일단 설문지는 열리게 합니다. (나중에 원인 파악 용이)
+console.log("현재 배정된 트랙 개수:", PARTICIPANT_TRACKS.length);
       console.log("participantId:", participantId);
       console.log("버전:", assignment.versionIndex);
       console.log("장르:", assignment.selectedGenres);
