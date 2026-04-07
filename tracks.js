@@ -12,7 +12,7 @@ const RAW_TRACKS = [
 const SUPABASE_PROJECT_ID = 'zididtqghlsxszjkpiuk'; // 실제 ID로 변경
 const BUCKET_NAME = 'audio-tracks'; 
 
-export const TRACKS = RAW_TRACKS.map(track => {
+const TRACKS = RAW_TRACKS.map(track => {
   // 파일 경로 내의 공백이나 특수문자를 URL용으로 변환 (예: ' ' -> '%20')
   const encodedPath = track.file.split('/').map(part => encodeURIComponent(part)).join('/');
   
