@@ -5,43 +5,141 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>음악 젠더 인상 설문</title>
 
+  <!-- jsPsych core -->
   <script src="https://unpkg.com/jspsych@7.3.4/dist/index.browser.js"></script>
   <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" />
 
+  <!-- plugins -->
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3/dist/index.browser.js"></script>
   <script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.0.3/dist/index.browser.js"></script>
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script src="tracks.js"></script>
+  <!-- tracks -->
+  <script src="./tracks.js"></script>
 
   <style>
-    body { background: #fafafa; }
-    .jspsych-content { max-width: 920px; text-align: left; }
-    .survey-wrap { line-height: 1.8; font-size: 16px; }
-    .question-block { margin: 24px 0; padding: 18px 20px; background: white; border: 1px solid #e5e5e5; border-radius: 12px; }
-    .question-title { font-weight: 700; margin-bottom: 10px; }
-    label { display: block; margin: 8px 0; cursor: pointer; }
-    audio { width: 100%; margin-top: 10px; }
-    textarea { width: 100%; min-height: 120px; padding: 10px; font-size: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-    input[type="text"], input[type="number"] { width: 100%; max-width: 500px; padding: 10px; font-size: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; margin-top: 8px; }
-    .hidden { display: none; }
-    .note { font-size: 14px; color: #666; margin-top: 8px; }
+    body {
+      background: #fafafa;
+    }
+
+    .jspsych-content {
+      max-width: 920px;
+      text-align: left;
+    }
+
+    .survey-wrap {
+      line-height: 1.8;
+      font-size: 16px;
+    }
+
+    .question-block {
+      margin: 24px 0;
+      padding: 18px 20px;
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+    }
+
+    .question-title {
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 10px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      max-width: 500px;
+      padding: 10px;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      margin-top: 8px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .note {
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .warning {
+      color: #c0392b;
+      font-size: 14px;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body></body>
 
 <script>
-  // 원래 있던 Supabase 설정 그대로 유지
+  // =========================
+  // 1. 기본 확인 로그
+  // =========================
+  console.log("initJsPsych:", typeof initJsPsych);
+  console.log("jsPsychHtmlButtonResponse:", typeof jsPsychHtmlButtonResponse);
+  console.log("jsPsychSurveyHtmlForm:", typeof jsPsychSurveyHtmlForm);
+  console.log("window.TRACKS exists:", !!window.TRACKS);
+  console.log("window.TRACKS length:", Array.isArray(window.TRACKS) ? window.TRACKS.length : "not array");
+  console.log("window.TRACKS sample:", Array.isArray(window.TRACKS) ? window.TRACKS[0] : null);
+
+  // tracks.js 로드 실패 시 즉시 중단
+  if (!Array.isArray(window.TRACKS) || window.TRACKS.length === 0) {
+    console.error("tracks.js 로드 실패 또는 window.TRACKS 비어 있음");
+    document.body.innerHTML = `
+      <div style="max-width:800px;margin:40px auto;line-height:1.8;font-family:sans-serif;">
+        <h2>트랙 데이터를 불러오지 못했습니다.</h2>
+        <p>잠시 후 새로고침(Ctrl+F5)해 주세요.</p>
+        <p>문제가 계속되면 <code>tracks.js</code> 파일 경로와 GitHub 업로드 상태를 확인해 주세요.</p>
+      </div>
+    `;
+    throw new Error("window.TRACKS is missing");
+  }
+
+  // =========================
+  // 2. Supabase 설정
+  // =========================
   const SUPABASE_URL = "https://zididtqghlsxszjkpiuk.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppZGlkdHFnaGxzeHN6amtwaXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MTA3MjMsImV4cCI6MjA5MTA4NjcyM30.Fj0yYiHS071MCMTsdlRv7FMRiijvTyDnalgFaTaxjjw";
+  const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // 로컬 스토리지 키 버전 유지
+  // =========================
+  // 3. localStorage key
+  // =========================
   const SAVE_KEY = "music_gender_survey_progress_v5";
   const ASSIGNMENT_KEY = "music_gender_assignment_v5";
   const PARTICIPANT_ID_KEY = "music_gender_participant_id_v5";
 
+  // =========================
+  // 4. 버전별 장르 세트
+  // =========================
   const VERSION_GENRE_SETS = [
     ["blues", "jazz", "pop", "rock", "hiphop"],
     ["country", "disco", "reggae", "metal", "classical"],
@@ -49,180 +147,535 @@
     ["jazz", "disco", "rock", "classical", "hiphop"]
   ];
 
-  // --- 유틸 함수 (원래 코드 그대로) ---
-  function saveProgress(jsPsych) { localStorage.setItem(SAVE_KEY, JSON.stringify(jsPsych.data.get().values())); }
-  function clearSurveyState() { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(ASSIGNMENT_KEY); localStorage.removeItem(PARTICIPANT_ID_KEY); }
-  function getCheckedValue(name) { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ""; }
-  function getCheckedValues(name) { return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value); }
-  function shuffle(array) { const arr = [...array]; for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+  // =========================
+  // 5. 유틸
+  // =========================
+  function saveProgress(jsPsych) {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(jsPsych.data.get().values()));
+  }
+
+  function clearSurveyState() {
+    localStorage.removeItem(SAVE_KEY);
+    localStorage.removeItem(ASSIGNMENT_KEY);
+    localStorage.removeItem(PARTICIPANT_ID_KEY);
+  }
+
+  function getCheckedValue(name) {
+    const el = document.querySelector(`input[name="${name}"]:checked`);
+    return el ? el.value : "";
+  }
+
+  function getCheckedValues(name) {
+    return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
+  }
+
+  function shuffle(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
 
   function getTracksForGenres(allTracks, selectedGenres) {
     let selectedTracks = [];
+
     selectedGenres.forEach(genre => {
       const genreTracks = allTracks.filter(t => t.genre === genre);
+
       const feminine = genreTracks.filter(t => t.style === "feminine");
       const masculine = genreTracks.filter(t => t.style === "masculine");
       const neutral = genreTracks.filter(t => t.style === "neutral");
-      if (feminine.length < 2 || masculine.length < 2 || neutral.length < 2) return;
+
+      if (feminine.length < 2 || masculine.length < 2 || neutral.length < 2) {
+        console.error(`장르 ${genre}에서 스타일별 곡 수가 부족합니다.`);
+        return;
+      }
+
       selectedTracks.push(...shuffle(feminine).slice(0, 2));
       selectedTracks.push(...shuffle(masculine).slice(0, 2));
       selectedTracks.push(...shuffle(neutral).slice(0, 2));
     });
+
     return shuffle(selectedTracks);
   }
 
   function getOrCreateParticipantId() {
     const saved = localStorage.getItem(PARTICIPANT_ID_KEY);
     if (saved) return saved;
+
     const pid = "P_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
     localStorage.setItem(PARTICIPANT_ID_KEY, pid);
     return pid;
   }
 
+  // =========================
+  // 6. Supabase에서 전역 버전 가져오기
+  // =========================
   async function getGlobalVersionIndex() {
     const { data, error } = await supabaseClient.rpc("get_and_increment_assignment_counter");
-    if (error) throw error;
+
+    if (error) {
+      console.error("버전 카운터 함수 호출 실패:", error);
+      throw error;
+    }
+
     return data % VERSION_GENRE_SETS.length;
   }
 
-  // ★ 수정된 핵심 부분: TRACKS 데이터를 window.TRACKS에서 확실히 가져옴 ★
+  // =========================
+  // 7. 같은 참가자는 새로고침해도 같은 배정 유지
+  // =========================
   async function getOrCreateAssignment() {
     const saved = localStorage.getItem(ASSIGNMENT_KEY);
+
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed && parsed.tracks && parsed.tracks.length > 0) return parsed;
-      } catch (e) {}
+        if (parsed && parsed.versionIndex !== undefined && Array.isArray(parsed.tracks)) {
+          console.log("기존 배정 사용:", parsed.versionIndex, parsed.selectedGenres);
+          return parsed;
+        }
+      } catch (e) {
+        console.warn("저장된 배정 정보 파싱 실패. 새로 배정합니다.");
+      }
     }
-
-    // tracks.js에서 선언된 TRACKS를 가져오는 안전한 방법
-    const rawData = window.TRACKS || (typeof TRACKS !== 'undefined' ? TRACKS : null);
-    if (!rawData) throw new Error("TRACKS_NOT_FOUND");
 
     const versionIndex = await getGlobalVersionIndex();
     const selectedGenres = VERSION_GENRE_SETS[versionIndex];
-    const tracks = getTracksForGenres(rawData, selectedGenres);
+    const tracks = getTracksForGenres(window.TRACKS, selectedGenres);
 
-    const assignment = { versionIndex, selectedGenres, tracks };
+    const assignment = {
+      versionIndex,
+      selectedGenres,
+      tracks
+    };
+
     localStorage.setItem(ASSIGNMENT_KEY, JSON.stringify(assignment));
+    console.log("새 배정 생성:", versionIndex, selectedGenres);
+    console.log("새 배정 트랙 수:", tracks.length);
+
     return assignment;
   }
 
-  // --- 저장 로직 (원래 코드 그대로) ---
+  // =========================
+  // 8. 응답 저장 함수
+  // =========================
   function extractStructuredData(allData, participantId, assignment) {
-    let background = null; let freeResponse = null;
-    const trialData = allData.filter(row => row.page_type === "music_trial");
-    allData.forEach(row => {
-      if (row.page_type === "background") background = row.response;
-      if (row.page_type === "free_response") freeResponse = row.response;
-    });
-    return { participant_id: participantId, assigned_version: assignment.versionIndex, selected_genres: assignment.selectedGenres, background, free_response: freeResponse, trial_data: trialData };
+    let background = null;
+    let freeResponse = null;
+
+    const trialData = allData.filter(row => row.trial_type === "survey-html-form");
+
+    for (const row of allData) {
+      if (row.trial_type === "survey-html-form" && row.response) {
+        if (
+          row.response.name !== undefined ||
+          row.response.age !== undefined ||
+          row.response.gender !== undefined ||
+          row.response.nationality !== undefined
+        ) {
+          background = row.response;
+        }
+
+        if (
+          row.response.free_masculine !== undefined ||
+          row.response.free_feminine !== undefined ||
+          row.response.free_criteria !== undefined
+        ) {
+          freeResponse = row.response;
+        }
+      }
+    }
+
+    return {
+      participant_id: participantId,
+      assigned_version: assignment.versionIndex,
+      selected_genres: assignment.selectedGenres,
+      background: background,
+      free_response: freeResponse,
+      trial_data: trialData
+    };
   }
 
   async function saveResultsToSupabase(jsPsych, participantId, assignment) {
     const allData = jsPsych.data.get().values();
     const payload = extractStructuredData(allData, participantId, assignment);
-    const { error } = await supabaseClient.from("survey_results").insert([payload]);
-    if (error) throw error;
+
+    const { error } = await supabaseClient
+      .from("survey_results")
+      .insert([payload]);
+
+    if (error) {
+      console.error("응답 저장 실패:", error);
+      throw error;
+    }
+
+    console.log("응답 저장 성공");
   }
 
-  // --- 실행 (원래 코드 로직 그대로) ---
+  // =========================
+  // 9. 메인 실행
+  // =========================
   (async () => {
     try {
       const participantId = getOrCreateParticipantId();
       const assignment = await getOrCreateAssignment();
       const PARTICIPANT_TRACKS = assignment.tracks;
 
-      if (!PARTICIPANT_TRACKS || PARTICIPANT_TRACKS.length === 0) {
-        alert("트랙 배정 오류가 발생했습니다. 브라우저 콘솔에서 localStorage.clear() 후 새로고침 해주세요.");
+      if (!Array.isArray(PARTICIPANT_TRACKS) || PARTICIPANT_TRACKS.length !== 30) {
+        alert("배정된 트랙 수가 올바르지 않습니다. tracks.js와 장르 구성을 확인해주세요.");
+        console.error("배정 오류:", PARTICIPANT_TRACKS);
         return;
       }
+
+      console.log("participantId:", participantId);
+      console.log("버전:", assignment.versionIndex);
+      console.log("장르:", assignment.selectedGenres);
+      console.log("트랙 수:", PARTICIPANT_TRACKS.length);
+      console.log("첫 번째 트랙 URL:", PARTICIPANT_TRACKS[0]?.file);
 
       const jsPsych = initJsPsych({
         show_progress_bar: true,
         auto_update_progress_bar: true,
-        on_trial_finish: () => saveProgress(jsPsych)
+        on_trial_finish: function() {
+          saveProgress(jsPsych);
+        }
       });
 
       let timeline = [];
 
-      // [1] 원래의 시작 화면
+      // 시작 화면
       timeline.push({
         type: jsPsychHtmlButtonResponse,
-        stimulus: `<div class="survey-wrap"><h2>음악 인상 설문</h2><p>안녕하세요. 이화여자대학교 배민영입니다...</p></div>`,
+        stimulus: `
+          <div class="survey-wrap">
+            <h2>음악 인상 설문</h2>
+            <p><strong>안녕하세요. 저는 본 설문지를 제작한 이화여자대학교 생명과학전공 배민영입니다.</strong></p>
+            <p>
+              본 설문은 음악의 <strong>도입부 10초</strong>를 들었을 때 사람들이 어떤 인상을 받는지 알아보기 위한
+              연구의 일환으로 진행됩니다. 각 문항에는 정답이 없으므로, 느끼신 그대로 편하게 응답해 주시면 됩니다.
+            </p>
+            <p>
+              설문 종료 후 연락 가능한 <strong>전화번호를 남겨주신 분들에 한해</strong>, 추첨을 통해
+              <strong>세 분께 스타벅스 10,000원 상당의 기프티콘</strong>을 드릴 예정입니다.
+              많은 관심과 참여 부탁드립니다.
+            </p>
+            <p class="note">
+              수집된 개인정보는 연구 및 기프티콘 지급 목적 외에는 사용되지 않으며,
+              연구 종료 후 안전하게 폐기될 예정입니다.
+            </p>
+          </div>
+        `,
         choices: ["시작하기"]
       });
 
-      // [2] 원래의 배경 문항
+      // 배경 문항
       timeline.push({
         type: jsPsychSurveyHtmlForm,
-        data: { page_type: "background" },
+        data: {
+          page_type: "background",
+          participant_id: participantId
+        },
+        preamble: `
+          <div class="survey-wrap">
+            <h2>배경 문항</h2>
+          </div>
+        `,
         html: `
-          <div class="question-block"><div class="question-title">이름</div><input name="name" type="text" /></div>
-          <div class="question-block"><div class="question-title">나이</div><input name="age" type="number" /></div>
+          <div class="question-block">
+            <div class="question-title">이름</div>
+            <input name="name" type="text" />
+          </div>
+
+          <div class="question-block">
+            <div class="question-title">나이</div>
+            <input name="age" type="number" min="1" />
+          </div>
+
           <div class="question-block">
             <div class="question-title">젠더</div>
             <label><input type="radio" name="gender" value="female"> 여성</label>
             <label><input type="radio" name="gender" value="male"> 남성</label>
-            <label><input type="radio" name="gender" value="nonbinary"> 기타</label>
+            <label><input type="radio" name="gender" value="nonbinary"> 논바이너리/기타</label>
+            <label><input type="radio" name="gender" value="prefer_not_to_say"> 응답하고 싶지 않음</label>
+          </div>
+
+          <div class="question-block">
+            <div class="question-title">국적</div>
+            <input name="nationality" type="text" />
+          </div>
+
+          <div class="question-block">
+            <div class="question-title">음악 청취 빈도</div>
+            <label><input type="radio" name="listening_freq" value="rarely"> 거의 듣지 않음</label>
+            <label><input type="radio" name="listening_freq" value="sometimes"> 가끔 듣는 편</label>
+            <label><input type="radio" name="listening_freq" value="often"> 자주 듣는 편</label>
+            <label><input type="radio" name="listening_freq" value="very_often"> 매우 자주 듣는 편</label>
+          </div>
+
+          <div class="question-block">
+            <div class="question-title">음악 교육 경험</div>
+            <label><input type="radio" name="music_education" value="none"> 없음</label>
+            <label><input type="radio" name="music_education" value="less_than_1_year"> 1년 미만</label>
+            <label><input type="radio" name="music_education" value="1_to_3_years"> 1~3년</label>
+            <label><input type="radio" name="music_education" value="more_than_3_years"> 3년 이상</label>
+            <input name="music_education_detail" type="text" placeholder="예: 피아노 5년, 합창단 활동, 독학으로 작곡 공부 등 (선택)" />
+          </div>
+
+          <div class="question-block">
+            <div class="question-title">전화번호 (선택)</div>
+            <input name="phone_number" type="text" placeholder="예: 010-1234-5678" />
+            <p class="note">기프티콘 추첨 및 지급을 위한 연락처입니다. 연구 종료 후 폐기됩니다.</p>
           </div>
         `,
         button_label: "다음"
       });
 
-      // [3] 원래의 자극별 문항
+      // 자극별 문항
       PARTICIPANT_TRACKS.forEach((track, idx) => {
         timeline.push({
           type: jsPsychSurveyHtmlForm,
-          data: { page_type: "music_trial", track_id: track.id, genre: track.genre, style: track.style },
+          data: {
+            page_type: "music_trial",
+            participant_id: participantId,
+            track_id: track.id,
+            original_name: track.original_name || "",
+            track_file: track.file,
+            genre: track.genre || "",
+            style: track.style || "",
+            assigned_version: assignment.versionIndex
+          },
           preamble: `
             <div class="survey-wrap">
-              <h3>${idx + 1} / ${PARTICIPANT_TRACKS.length}</h3>
-              <audio controls><source src="${track.file}" type="audio/wav"></audio>
+              <h2>음악 듣기</h2>
+              <p><strong>${idx + 1} / ${PARTICIPANT_TRACKS.length}</strong></p>
+
+              <div class="question-block">
+                <div class="question-title">음악 재생</div>
+                <p class="note">아래 음악을 듣고 스크롤을 내려 응답해 주세요. 다시 듣기 가능합니다.</p>
+                <audio controls preload="auto">
+                  <source src="${track.file}" type="audio/wav">
+                  브라우저가 오디오 재생을 지원하지 않습니다.
+                </audio>
+              </div>
             </div>
           `,
           html: `
             <div class="question-block">
               <div class="question-title">Q1. 이 음악은 젠더화된 이미지를 떠올리게 했나요?</div>
-              <label><input type="radio" name="q1" value="1"> 전혀 아님</label>
-              <label><input type="radio" name="q1" value="2"> 거의 아님</label>
-              <label><input type="radio" name="q1" value="3"> 다소 떠오름</label>
-              <label><input type="radio" name="q1" value="4"> 강하게 떠오름</label>
+              <label><input type="radio" name="q1" value="1"> 1. 전혀 떠오르지 않았다</label>
+              <label><input type="radio" name="q1" value="2"> 2. 거의 떠오르지 않음</label>
+              <label><input type="radio" name="q1" value="3"> 3. 다소 떠오름</label>
+              <label><input type="radio" name="q1" value="4"> 4. 매우 강하게 떠오름</label>
+            </div>
+
+            <div id="q1_1_block" class="question-block hidden">
+              <div class="question-title">Q1-1. 가장 먼저 떠오른 젠더 이미지는 어느 쪽인가요?</div>
+              <label><input type="radio" name="q1_1" value="1"> 1. 매우 여성적</label>
+              <label><input type="radio" name="q1_1" value="2"> 2. 다소 여성적</label>
+              <label><input type="radio" name="q1_1" value="3"> 3. 중성적 (여성, 남성 둘 다 잘 어울림)</label>
+              <label><input type="radio" name="q1_1" value="4"> 4. 다소 남성적</label>
+              <label><input type="radio" name="q1_1" value="5"> 5. 매우 남성적</label>
+              <label><input type="radio" name="q1_1" value="6"> 6. 잘 모르겠음</label>
+            </div>
+
+            <div id="q1_2_block" class="question-block hidden">
+              <div class="question-title">Q1-2. 이 곡에 어울리는 젠더 이미지를 떠올려본다면 어느 쪽인가요?</div>
+              <label><input type="radio" name="q1_2" value="1"> 1. 매우 여성적</label>
+              <label><input type="radio" name="q1_2" value="2"> 2. 다소 여성적</label>
+              <label><input type="radio" name="q1_2" value="3"> 3. 중성적 (여성, 남성 둘 다 잘 어울림)</label>
+              <label><input type="radio" name="q1_2" value="4"> 4. 다소 남성적</label>
+              <label><input type="radio" name="q1_2" value="5"> 5. 매우 남성적</label>
+              <label><input type="radio" name="q1_2" value="6"> 6. 잘 모르겠음</label>
+            </div>
+
+            <div class="question-block">
+              <div class="question-title">Q2. 위 판단에 대한 확신은 어느 정도인가요?</div>
+              <label><input type="radio" name="q2" value="1"> 1. 전혀 확신이 없음</label>
+              <label><input type="radio" name="q2" value="2"> 2. 다소 확신이 없음</label>
+              <label><input type="radio" name="q2" value="3"> 3. 보통</label>
+              <label><input type="radio" name="q2" value="4"> 4. 다소 확신이 있음</label>
+              <label><input type="radio" name="q2" value="5"> 5. 매우 확신함</label>
+            </div>
+
+            <div class="question-block">
+              <div class="question-title">Q3. 위의 젠더 이미지 판단에 가장 큰 영향을 준 요소는 무엇인가요? (복수응답 가능)</div>
+              <label><input type="checkbox" name="q3" value="instrument"> 악기 구성</label>
+              <label><input type="checkbox" name="q3" value="rhythm"> 리듬/비트</label>
+              <label><input type="checkbox" name="q3" value="tempo"> 빠르기 (tempo)</label>
+              <label><input type="checkbox" name="q3" value="genre_feel"> 장르적 느낌</label>
+              <label><input type="checkbox" name="q3" value="mood"> 곡의 분위기</label>
+              <label><input type="checkbox" name="q3" value="other"> 기타</label>
+              <input type="text" name="q3_other_text" placeholder="기타 내용을 적어주세요 (선택)" />
+            </div>
+
+            <div class="question-block">
+              <div class="question-title">Q4. 이 음악은 다음 중 어떤 장르적 인상에 가장 가까웠나요? (복수응답 가능)</div>
+              <label><input type="checkbox" name="q4" value="rock"> 락 계열</label>
+              <label><input type="checkbox" name="q4" value="metal"> 메탈 계열</label>
+              <label><input type="checkbox" name="q4" value="pop"> 팝 계열</label>
+              <label><input type="checkbox" name="q4" value="hiphop"> 힙합 계열</label>
+              <label><input type="checkbox" name="q4" value="classical"> 클래식 계열</label>
+              <label><input type="checkbox" name="q4" value="disco"> 디스코 계열</label>
+              <label><input type="checkbox" name="q4" value="reggae"> 레게 계열</label>
+              <label><input type="checkbox" name="q4" value="country"> 컨츄리 음악 계열</label>
+              <label><input type="checkbox" name="q4" value="blues"> 블루스 계열</label>
+              <label><input type="checkbox" name="q4" value="jazz"> 재즈 계열</label>
+              <label><input type="checkbox" name="q4" value="other"> 기타</label>
+              <label><input type="checkbox" name="q4" value="unknown"> 잘 모르겠음</label>
+              <input type="text" name="q4_other_text" placeholder="기타 내용을 적어주세요 (선택)" />
+            </div>
+
+            <div class="question-block">
+              <div class="question-title">Q5. 이 음악의 장르적 인상이 젠더 이미지를 떠올리는 데 얼마나 영향을 주었다고 생각하나요?</div>
+              <label><input type="radio" name="q5" value="1"> 1. 전혀 영향이 없었다</label>
+              <label><input type="radio" name="q5" value="2"> 2. 거의 영향이 없었다</label>
+              <label><input type="radio" name="q5" value="3"> 3. 보통이다</label>
+              <label><input type="radio" name="q5" value="4"> 4. 다소 영향이 있었다</label>
+              <label><input type="radio" name="q5" value="5"> 5. 매우 영향이 있었다</label>
             </div>
           `,
+          button_label: "다음 곡으로",
+          on_load: function() {
+            const q1Radios = document.querySelectorAll('input[name="q1"]');
+            const q11 = document.getElementById("q1_1_block");
+            const q12 = document.getElementById("q1_2_block");
+
+            function updateConditional() {
+              const q1 = getCheckedValue("q1");
+              q11.classList.add("hidden");
+              q12.classList.add("hidden");
+
+              if (q1 === "3" || q1 === "4") {
+                q11.classList.remove("hidden");
+              } else if (q1 === "1" || q1 === "2") {
+                q12.classList.remove("hidden");
+              }
+            }
+
+            q1Radios.forEach(r => r.addEventListener("change", updateConditional));
+          },
           on_finish: function(data) {
-            data.response = { q1: getCheckedValue("q1") };
+            const response = data.response || {};
+            response.q1 = getCheckedValue("q1");
+            response.q1_1 = getCheckedValue("q1_1");
+            response.q1_2 = getCheckedValue("q1_2");
+            response.q2 = getCheckedValue("q2");
+            response.q3 = getCheckedValues("q3");
+            response.q4 = getCheckedValues("q4");
+            response.q5 = getCheckedValue("q5");
+
+            data.response = response;
           }
         });
       });
 
-      // [4] 나머지 타임라인 (원래 코드 흐름)
+      // 자유 서술
       timeline.push({
         type: jsPsychSurveyHtmlForm,
-        data: { page_type: "free_response" },
-        html: `<div class="question-block"><div class="question-title">마지막 자유 의견</div><textarea name="free_criteria"></textarea></div>`,
+        data: {
+          page_type: "free_response",
+          participant_id: participantId
+        },
+        preamble: `
+          <div class="survey-wrap">
+            <h2>마지막 자유 서술 문항</h2>
+            <p>모든 음악을 들은 뒤의 전체적인 인상을 적어주세요.</p>
+          </div>
+        `,
+        html: `
+          <div class="question-block">
+            <div class="question-title">1. 전체적으로 어떤 특징의 음악이 ‘남성적’이라고 느껴졌나요?</div>
+            <textarea name="free_masculine"></textarea>
+          </div>
+
+          <div class="question-block">
+            <div class="question-title">2. 전체적으로 어떤 특징의 음악이 ‘여성적’이라고 느껴졌나요?</div>
+            <textarea name="free_feminine"></textarea>
+          </div>
+
+          <div class="question-block">
+            <div class="question-title">3. 설문에서 젠더 이미지를 판단할 때 본인이 주로 어떤 기준을 사용했다고 생각하시나요?</div>
+            <p class="note">예: 음악학적 지식, 자신의 교육 경험, 문화적 편견, 잘 모르겠다 등</p>
+            <textarea name="free_criteria"></textarea>
+          </div>
+
+          <div class="question-block">
+            <div class="question-title">4. 판단하기 어려운 경우(잘 모르겠거나, 중성적임)가 있었다면 왜 어려웠던 것 같으신가요?</div>
+            <textarea name="free_difficulty"></textarea>
+          </div>
+
+          <div class="question-block">
+            <div class="question-title">5. 음악의 ‘젠더성’(여성적인 음악, 남성적인 음악)이라는 것이 있다고 생각하시나요? 있다면 어떤 음악일까요?</div>
+            <textarea name="free_gendered_music"></textarea>
+          </div>
+        `,
         button_label: "제출하기"
       });
 
+      // 제출 화면
       timeline.push({
         type: jsPsychHtmlButtonResponse,
-        stimulus: "<h2>응답을 저장하시겠습니까?</h2>",
-        choices: ["최종 제출"],
-        on_finish: async () => { await saveResultsToSupabase(jsPsych, participantId, assignment); }
+        stimulus: `
+          <div class="survey-wrap">
+            <h2>마지막 단계입니다</h2>
+            <p>응답을 저장하시려면 아래 버튼을 눌러주세요.</p>
+          </div>
+        `,
+        choices: ["응답 제출하기"]
       });
 
+      // 실제 저장
       timeline.push({
         type: jsPsychHtmlButtonResponse,
-        stimulus: "<h2>제출 완료! 감사합니다.</h2>",
+        stimulus: `
+          <div class="survey-wrap">
+            <h2>응답 저장 중입니다...</h2>
+            <p>잠시만 기다려주세요.</p>
+          </div>
+        `,
+        choices: [],
+        trial_duration: 300,
+        on_finish: async function() {
+          try {
+            await saveResultsToSupabase(jsPsych, participantId, assignment);
+          } catch (e) {
+            console.error(e);
+            alert("응답 저장에 실패했습니다. 새로고침하지 말고 연구자에게 알려주세요.");
+          }
+        }
+      });
+
+      // 종료
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+          <div class="survey-wrap">
+            <h2>설문이 완료되었습니다.</h2>
+            <p>참여해주셔서 감사합니다.</p>
+            <p class="note">연구자 측 DB에 응답이 저장되었습니다.</p>
+          </div>
+        `,
         choices: ["종료"],
-        on_finish: () => clearSurveyState()
+        on_finish: function() {
+          console.log("최종 데이터:", jsPsych.data.get().values());
+          clearSurveyState();
+        }
       });
 
       jsPsych.run(timeline);
 
     } catch (err) {
-      console.error(err);
-      document.body.innerHTML = `<div style="padding:40px;">오류가 발생했습니다. 잠시 후 새로고침 해주세요.</div>`;
+      console.error("설문 초기화 실패:", err);
+      document.body.innerHTML = `
+        <div style="max-width:800px;margin:40px auto;line-height:1.8;font-family:sans-serif;">
+          <h2>설문을 불러오는 중 오류가 발생했습니다.</h2>
+          <p>잠시 후 다시 시도해 주세요.</p>
+          <p>문제가 반복되면 연구자에게 알려주세요.</p>
+        </div>
+      `;
     }
   })();
 </script>
